@@ -10,8 +10,8 @@ export const site = {
   tagline: "Beautiful Shaadi Biodata & Resumes in minutes",
   description:
     "Create a beautiful marriage biodata or a professional, ATS-friendly resume online in minutes. Pick a template, fill your details, preview free and download a print-ready PDF.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://patra.build-ai-version.com",
-  parentDomain: "build-ai-version.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://patra.build-ai-verse.com",
+  parentDomain: "build-ai-verse.com",
   poweredBy: "Thakur Ventures",
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@build-ai-version.com",
   /** Legal / contact details shown on Contact & policy pages (required by Razorpay). TODO: fill in. */

@@ -15,11 +15,20 @@ import {
 import { RenderDocument } from "@/components/templates";
 import { htmlPrims } from "@/components/templates/html";
 import { sampleBiodata, sampleResume } from "@/lib/defaults";
+import { sampleBiodataHi } from "@/lib/hindi";
 import type { DocumentPayload } from "@/lib/templates";
 import { site } from "@/config/site";
 import { minPrice } from "@/lib/templates";
 
-export const PROMO_FRAMES = 600; // 20s @ 30fps
+/**
+ * Launch promo. One source, two formats (see Root.tsx):
+ *  - 1080x1920 vertical: Instagram Reels + YouTube Shorts
+ *  - 1920x1080 landscape: YouTube
+ * Every scene reads `useLandscape()` and lays itself out for the current format.
+ */
+
+/** Launch offer: downloads are free. Set false to show the normal price scene instead. */
+export const LAUNCH_OFFER = true;
 
 const C = {
   maroon: "#7A1C3A",
@@ -28,10 +37,11 @@ const C = {
   marigold: "#F9B949",
   marigoldSoft: "#FCD38A",
   ink: "#2A1A1F",
+  green: "#16A34A",
 };
 
 /* ------------------------------------------------------------------ */
-/* Fonts (same files as the PDF renderer)                              */
+/* Fonts (same files as the PDF renderer, incl. Devanagari)            */
 /* ------------------------------------------------------------------ */
 const FONTS: [string, string, string, string][] = [
   ["PoppinsV", "poppins-latin-400-normal", "400", "normal"],
@@ -44,6 +54,13 @@ const FONTS: [string, string, string, string][] = [
   ["CormorantV", "cormorant-garamond-latin-500-normal", "500", "normal"],
   ["CormorantV", "cormorant-garamond-latin-700-normal", "700", "normal"],
   ["CormorantV", "cormorant-garamond-latin-500-italic", "500", "italic"],
+  ["HindV", "hind-devanagari-400-normal", "400", "normal"],
+  ["HindV", "hind-devanagari-500-normal", "500", "normal"],
+  ["HindV", "hind-devanagari-600-normal", "600", "normal"],
+  ["HindV", "hind-devanagari-700-normal", "700", "normal"],
+  ["MartelV", "martel-devanagari-400-normal", "400", "normal"],
+  ["MartelV", "martel-devanagari-600-normal", "600", "normal"],
+  ["MartelV", "martel-devanagari-700-normal", "700", "normal"],
 ];
 
 function useFonts() {
@@ -62,14 +79,21 @@ const rootVars = {
   "--font-poppins": "PoppinsV",
   "--font-playfair": "PlayfairV",
   "--font-cormorant": "CormorantV",
-  fontFamily: "PoppinsV, sans-serif",
+  "--font-hind": "HindV",
+  "--font-martel": "MartelV",
+  fontFamily: "PoppinsV, HindV, sans-serif",
 } as CSSProperties;
 
-const display: CSSProperties = { fontFamily: "PlayfairV, serif", fontWeight: 700 };
+const display: CSSProperties = { fontFamily: "PlayfairV, MartelV, serif", fontWeight: 700 };
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
+function useLandscape() {
+  const { width, height } = useVideoConfig();
+  return width > height;
+}
+
 function useSpring(delay = 0, damping = 14) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -92,6 +116,24 @@ function Doc({ doc, width }: { doc: DocumentPayload; width: number }) {
       <div style={{ width: 595, transform: `scale(${k})`, transformOrigin: "top left" }}>
         <RenderDocument doc={doc} P={htmlPrims} />
       </div>
+    </div>
+  );
+}
+
+/** A document on a cream "card", like a phone/printout. */
+function DocCard({ doc, width, style }: { doc: DocumentPayload; width: number; style?: CSSProperties }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        padding: Math.round(width * 0.027),
+        borderRadius: 40,
+        background: C.cream,
+        boxShadow: "0 60px 120px rgba(0,0,0,0.45)",
+        ...style,
+      }}
+    >
+      <Doc doc={doc} width={width} />
     </div>
   );
 }
@@ -132,13 +174,54 @@ function Background() {
   );
 }
 
+/** Headline block: centred at the top in vertical, left column (vertically centred) in landscape. */
 function Caption({ children, top = 170 }: { children: ReactNode; top?: number }) {
+  const L = useLandscape();
+  if (L) {
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: 130,
+          width: 880,
+          top: 0,
+          bottom: 0,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          color: C.cream,
+        }}
+      >
+        {children}
+      </div>
+    );
+  }
   return (
     <div style={{ position: "absolute", top, left: 60, right: 60, textAlign: "center", color: C.cream }}>{children}</div>
   );
 }
 
-/** Fade the whole scene out during its last frames for smooth cuts. */
+function Chip({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        color: C.ink,
+        borderRadius: 999,
+        padding: "18px 40px",
+        fontSize: 42,
+        fontWeight: 600,
+        boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+        display: "inline-block",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Fade the whole scene in/out for smooth cuts. */
 function SceneFade({ duration, children }: { duration: number; children: ReactNode }) {
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 8, duration - 10, duration], [0, 1, 1, 0], {
@@ -152,6 +235,7 @@ function SceneFade({ duration, children }: { duration: number; children: ReactNo
 /* Scenes                                                              */
 /* ------------------------------------------------------------------ */
 function Hook() {
+  const L = useLandscape();
   const frame = useCurrentFrame();
   const stamp = useSpring(52, 9);
   const shake = frame > 40 && frame < 52 ? Math.sin(frame * 2.2) * 10 : 0;
@@ -159,23 +243,23 @@ function Hook() {
     <AbsoluteFill style={{ alignItems: "center" }}>
       <Caption top={260}>
         <Pop>
-          <div style={{ ...display, fontSize: 112, lineHeight: 1.05 }}>Shaadi ka biodata</div>
+          <div style={{ ...display, fontSize: L ? 104 : 112, lineHeight: 1.05 }}>Shaadi ka biodata</div>
         </Pop>
         <Pop delay={8}>
-          <div style={{ ...display, fontStyle: "italic", fontWeight: 400, fontSize: 104, color: C.marigold, marginTop: 10 }}>
+          <div style={{ ...display, fontStyle: "italic", fontWeight: 400, fontSize: L ? 96 : 104, color: C.marigold, marginTop: 10 }}>
             abhi bhi Word mein?
           </div>
         </Pop>
         <Pop delay={16}>
-          <div style={{ fontSize: 120, marginTop: 10 }}>😅</div>
+          <div style={{ fontSize: L ? 110 : 120, marginTop: 10 }}>😅</div>
         </Pop>
       </Caption>
       {/* Boring plain doc */}
-      <Pop delay={22} style={{ position: "absolute", top: 940 }}>
+      <Pop delay={22} style={L ? { position: "absolute", top: 170, left: 1180 } : { position: "absolute", top: 940 }}>
         <div
           style={{
-            width: 520,
-            height: 680,
+            width: L ? 560 : 520,
+            height: L ? 720 : 680,
             background: "#fff",
             borderRadius: 12,
             padding: 50,
@@ -227,11 +311,12 @@ function Hook() {
 }
 
 function BuildBiodata() {
+  const L = useLandscape();
   const frame = useCurrentFrame();
   const name = "Priya Sharma";
   const typed = name.slice(0, Math.max(0, Math.floor((frame - 18) / 2.2)));
   const total = sampleBiodata.sections.reduce((n, s) => n + s.fields.length, 0);
-  const shown = Math.floor(interpolate(frame, [40, 115], [0, total], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const shown = Math.floor(interpolate(frame, [40, 105], [0, total], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   let left = shown;
   const sections = sampleBiodata.sections.map((s) => {
     const take = Math.max(0, Math.min(s.fields.length, left));
@@ -243,7 +328,14 @@ function BuildBiodata() {
     accent: "#8B1E3F",
     data: { ...sampleBiodata, name: typed, photo: frame > 60 ? staticFile("avatar-female.svg") : null, sections },
   };
-  const phone = useSpring(4);
+  const rise = useSpring(4);
+  const chipOpacity = interpolate(frame, [14, 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const chip = (
+    <Chip style={{ fontSize: 38, padding: "16px 34px" }}>
+      ✏️ {typed}
+      <span style={{ opacity: Math.floor(frame / 8) % 2 ? 1 : 0, color: C.maroon }}>|</span>
+    </Chip>
+  );
   return (
     <AbsoluteFill style={{ alignItems: "center" }}>
       <Caption top={150}>
@@ -256,38 +348,73 @@ function BuildBiodata() {
         <Pop delay={10}>
           <div style={{ fontSize: 50, fontWeight: 500, marginTop: 8 }}>sirf 5 minute mein ✨</div>
         </Pop>
+        {L ? <div style={{ marginTop: 50, opacity: chipOpacity }}>{chip}</div> : null}
       </Caption>
-      <div
-        style={{
-          position: "absolute",
-          top: 600,
-          transform: `translateY(${(1 - phone) * 500}px)`,
-          padding: 22,
-          borderRadius: 40,
-          background: C.cream,
-          boxShadow: "0 60px 120px rgba(0,0,0,0.45)",
-        }}
-      >
-        <Doc doc={doc} width={820} />
-      </div>
-      {/* Typing cursor chip */}
-      <div
-        style={{
-          position: "absolute",
-          top: 520,
-          background: "#fff",
-          color: C.ink,
-          borderRadius: 999,
-          padding: "16px 34px",
-          fontSize: 38,
-          fontWeight: 600,
-          boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-          opacity: interpolate(frame, [14, 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
-        }}
-      >
-        ✏️ {typed}
-        <span style={{ opacity: Math.floor(frame / 8) % 2 ? 1 : 0, color: C.maroon }}>|</span>
-      </div>
+      <DocCard
+        doc={doc}
+        width={L ? 560 : 820}
+        style={L ? { top: 90, left: 1180, transform: `translateY(${(1 - rise) * 500}px)` } : { top: 600, transform: `translateY(${(1 - rise) * 500}px)` }}
+      />
+      {L ? null : <div style={{ position: "absolute", top: 520, opacity: chipOpacity }}>{chip}</div>}
+    </AbsoluteFill>
+  );
+}
+
+function Hindi() {
+  const L = useLandscape();
+  const frame = useCurrentFrame();
+  const hi = frame >= 40;
+  const flip = interpolate(frame, [33, 40, 47], [1, 0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const doc: DocumentPayload = {
+    templateId: "biodata-royal",
+    accent: "#9A3412",
+    data: hi ? { ...sampleBiodataHi, photo: staticFile("avatar-female.svg") } : { ...sampleBiodata, photo: staticFile("avatar-female.svg") },
+  };
+  const toggle = (
+    <div style={{ display: "inline-flex", background: "rgba(255,255,255,0.14)", borderRadius: 999, padding: 8, gap: 6 }}>
+      {(["English", "हिन्दी"] as const).map((l, i) => {
+        const on = (i === 1) === hi;
+        return (
+          <div
+            key={l}
+            style={{
+              padding: "14px 40px",
+              borderRadius: 999,
+              fontSize: 42,
+              fontWeight: 600,
+              background: on ? C.marigold : "transparent",
+              color: on ? C.ink : C.cream,
+            }}
+          >
+            {l}
+          </div>
+        );
+      })}
+    </div>
+  );
+  return (
+    <AbsoluteFill style={{ alignItems: "center" }}>
+      <Caption top={150}>
+        <Pop>
+          <div style={{ ...display, fontSize: L ? 96 : 92, lineHeight: 1.1 }}>Hindi mein bhi!</div>
+        </Pop>
+        <Pop delay={6}>
+          <div style={{ ...display, fontSize: L ? 80 : 76, color: C.marigold, marginTop: 6 }}>हिन्दी में भी</div>
+        </Pop>
+        <Pop delay={12} style={{ marginTop: 34 }}>
+          {toggle}
+        </Pop>
+        {L ? (
+          <Pop delay={18} style={{ marginTop: 30, fontSize: 40, color: C.marigoldSoft }}>
+            Ek click mein English ↔ हिन्दी
+          </Pop>
+        ) : null}
+      </Caption>
+      <DocCard
+        doc={doc}
+        width={L ? 560 : 760}
+        style={L ? { top: 90, left: 1180, transform: `scaleX(${flip})` } : { top: 640, transform: `scaleX(${flip})` }}
+      />
     </AbsoluteFill>
   );
 }
@@ -296,16 +423,43 @@ const ACCENTS = ["#8B1E3F", "#1E3A8A", "#065F46", "#9A3412", "#6B21A8"];
 const LOTUS = ["#BE185D", "#0F766E", "#7C3AED", "#C2410C", "#1D4ED8"];
 
 function Colours() {
+  const L = useLandscape();
   const frame = useCurrentFrame();
-  const lotus = frame >= 55;
+  const lotus = frame >= 50;
   const list = lotus ? LOTUS : ACCENTS;
-  const idx = Math.floor((lotus ? frame - 55 : frame) / 11) % list.length;
+  const idx = Math.floor((lotus ? frame - 50 : frame) / 10) % list.length;
   const doc: DocumentPayload = {
     templateId: lotus ? "biodata-lotus" : "biodata-royal",
     accent: list[idx]!,
     data: { ...sampleBiodata, photo: staticFile("avatar-female.svg") },
   };
-  const flip = interpolate(frame, [48, 55, 62], [1, 0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const flip = interpolate(frame, [43, 50, 57], [1, 0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const swatches = (
+    <div
+      style={{
+        display: "inline-flex",
+        gap: L ? 24 : 30,
+        background: "rgba(255,255,255,0.12)",
+        padding: "24px 36px",
+        borderRadius: 999,
+      }}
+    >
+      {list.map((c, i) => (
+        <div
+          key={c}
+          style={{
+            width: L ? 66 : 76,
+            height: L ? 66 : 76,
+            borderRadius: 999,
+            background: c,
+            border: "5px solid #fff",
+            transform: `scale(${i === idx ? 1.25 : 1})`,
+            boxShadow: i === idx ? "0 0 0 8px rgba(249,185,73,0.8)" : "none",
+          }}
+        />
+      ))}
+    </div>
+  );
   return (
     <AbsoluteFill style={{ alignItems: "center" }}>
       <Caption top={170}>
@@ -313,57 +467,22 @@ function Colours() {
           <div style={{ ...display, fontSize: 96, lineHeight: 1.05 }}>Apna style chuniye</div>
         </Pop>
         <Pop delay={6}>
-          <div style={{ fontSize: 48, fontWeight: 500, color: C.marigoldSoft, marginTop: 14 }}>
-            Royal ya Modern · 5 colours each
-          </div>
+          <div style={{ fontSize: 48, fontWeight: 500, color: C.marigoldSoft, marginTop: 14 }}>Royal ya Modern · 5 colours each</div>
         </Pop>
+        {L ? <div style={{ marginTop: 56 }}>{swatches}</div> : null}
       </Caption>
-      <div
-        style={{
-          position: "absolute",
-          top: 470,
-          padding: 22,
-          borderRadius: 40,
-          background: C.cream,
-          boxShadow: "0 60px 120px rgba(0,0,0,0.45)",
-          transform: `scaleX(${flip})`,
-        }}
-      >
-        <Doc doc={doc} width={800} />
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          top: 1650,
-          display: "flex",
-          gap: 30,
-          background: "rgba(255,255,255,0.12)",
-          padding: "24px 36px",
-          borderRadius: 999,
-        }}
-      >
-        {list.map((c, i) => (
-          <div
-            key={c}
-            style={{
-              width: 76,
-              height: 76,
-              borderRadius: 999,
-              background: c,
-              border: "5px solid #fff",
-              transform: `scale(${i === idx ? 1.25 : 1})`,
-              boxShadow: i === idx ? "0 0 0 8px rgba(249,185,73,0.8)" : "none",
-            }}
-          />
-        ))}
-      </div>
+      <DocCard doc={doc} width={L ? 560 : 800} style={L ? { top: 90, left: 1180, transform: `scaleX(${flip})` } : { top: 470, transform: `scaleX(${flip})` }} />
+      {L ? null : <div style={{ position: "absolute", top: 1650 }}>{swatches}</div>}
     </AbsoluteFill>
   );
 }
 
 function Resumes() {
+  const L = useLandscape();
   const a = useSpring(6);
   const b = useSpring(14);
+  const tick = useSpring(36);
+  const ats = useSpring(48);
   const frame = useCurrentFrame();
   const classic: DocumentPayload = { templateId: "resume-classic", accent: "#1E3A8A", data: sampleResume };
   const modern: DocumentPayload = {
@@ -371,7 +490,8 @@ function Resumes() {
     accent: "#0F3D5E",
     data: { ...sampleResume, photo: staticFile("avatar-male.svg") },
   };
-  const tick = useSpring(40);
+  const wobble = Math.sin(frame / 20);
+  const shadow = { boxShadow: "0 50px 100px rgba(0,0,0,0.45)", borderRadius: 10, position: "absolute" } as const;
   return (
     <AbsoluteFill style={{ alignItems: "center" }}>
       <Caption top={170}>
@@ -379,81 +499,113 @@ function Resumes() {
           <div style={{ fontSize: 50, fontWeight: 500, color: C.marigoldSoft }}>Naukri chahiye?</div>
         </Pop>
         <Pop delay={5}>
-          <div style={{ ...display, fontSize: 104, lineHeight: 1.05 }}>Job-winning Resume</div>
+          <div style={{ ...display, fontSize: L ? 96 : 104, lineHeight: 1.05 }}>Job-winning Resume</div>
         </Pop>
+        {L ? (
+          <div style={{ marginTop: 50, display: "flex", flexDirection: "column", gap: 24, alignItems: "flex-start" }}>
+            <Chip style={{ transform: `scale(${tick})`, transformOrigin: "left center" }}>
+              <span style={{ color: C.green }}>✓</span> ATS-friendly · Recruiter-ready
+            </Chip>
+            <Chip style={{ transform: `scale(${ats})`, transformOrigin: "left center" }}>🎯 FREE ATS score checker</Chip>
+          </div>
+        ) : null}
       </Caption>
       <div
         style={{
-          position: "absolute",
-          top: 640,
-          left: 40,
-          transform: `translateX(${(1 - a) * -700}px) rotate(${-7 + Math.sin(frame / 20) * 1}deg)`,
-          boxShadow: "0 50px 100px rgba(0,0,0,0.45)",
-          borderRadius: 10,
+          ...shadow,
+          ...(L ? { top: 150, left: 1010 } : { top: 500, left: 40 }),
+          transform: `translateX(${(1 - a) * -700}px) rotate(${-7 + wobble}deg)`,
         }}
       >
-        <Doc doc={classic} width={560} />
+        <Doc doc={classic} width={L ? 440 : 560} />
       </div>
       <div
         style={{
-          position: "absolute",
-          top: 700,
-          right: 40,
-          transform: `translateX(${(1 - b) * 700}px) rotate(${6 - Math.sin(frame / 20) * 1}deg)`,
-          boxShadow: "0 50px 100px rgba(0,0,0,0.45)",
-          borderRadius: 10,
+          ...shadow,
+          ...(L ? { top: 230, left: 1400 } : { top: 560, right: 40 }),
+          transform: `translateX(${(1 - b) * 700}px) rotate(${6 - wobble}deg)`,
         }}
       >
-        <Doc doc={modern} width={560} />
+        <Doc doc={modern} width={L ? 440 : 560} />
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: 1560,
-          background: "#fff",
-          color: C.ink,
-          borderRadius: 999,
-          padding: "22px 44px",
-          fontSize: 46,
-          fontWeight: 600,
-          transform: `scale(${tick})`,
-          boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-        }}
-      >
-        <span style={{ color: "#16A34A" }}>✓</span> ATS-friendly · Recruiter-ready
-      </div>
+      {L ? null : (
+        <div style={{ position: "absolute", top: 1330, display: "flex", flexDirection: "column", gap: 24, alignItems: "center" }}>
+          <Chip style={{ transform: `scale(${tick})`, fontSize: 44 }}>
+            <span style={{ color: C.green }}>✓</span> ATS-friendly · Recruiter-ready
+          </Chip>
+          <Chip style={{ transform: `scale(${ats})`, fontSize: 44 }}>🎯 FREE ATS score checker</Chip>
+        </div>
+      )}
     </AbsoluteFill>
   );
 }
 
-function Price() {
+/** Launch offer (free) or the normal "from ₹X" price scene. */
+function Offer() {
+  const L = useLandscape();
   const frame = useCurrentFrame();
   const big = useSpring(8, 8);
   const glow = 0.5 + 0.5 * Math.sin(frame / 6);
-  const chips = ["📱 UPI / Card", "⚡ Instant PDF", "📧 Email pe copy"];
+  const strike = interpolate(frame, [20, 30], [0, 100], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const chips = LAUNCH_OFFER
+    ? ["⚡ Instant PDF", "📧 Email pe copy", "🚫 No signup"]
+    : ["📱 UPI / Card", "⚡ Instant PDF", "📧 Email pe copy"];
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-      <Pop style={{ textAlign: "center", color: C.cream }}>
-        <div style={{ fontSize: 64, fontWeight: 500 }}>Download sirf</div>
+    // Vertical: sit a little high so Instagram's caption overlay never covers the chips.
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", textAlign: "center", paddingBottom: L ? 0 : 240 }}>
+      <Pop style={{ color: C.cream }}>
+        <div
+          style={{
+            display: "inline-block",
+            background: C.marigold,
+            color: C.ink,
+            fontSize: L ? 44 : 50,
+            fontWeight: 700,
+            padding: "14px 40px",
+            borderRadius: 999,
+            marginBottom: 20,
+          }}
+        >
+          {LAUNCH_OFFER ? "🎉 LAUNCH OFFER" : "Download sirf"}
+        </div>
       </Pop>
+      {LAUNCH_OFFER ? (
+        <Pop delay={4} style={{ color: C.cream, fontSize: L ? 56 : 62, fontWeight: 500 }}>
+          PDF download{" "}
+          <span style={{ position: "relative", display: "inline-block", opacity: 0.75 }}>
+            ₹{minPrice()}
+            <span
+              style={{
+                position: "absolute",
+                left: -6,
+                top: "52%",
+                height: 7,
+                width: `calc(${strike}% + 12px)`,
+                background: "#F87171",
+                borderRadius: 4,
+                transform: "rotate(-8deg)",
+              }}
+            />
+          </span>
+        </Pop>
+      ) : null}
       <div
         style={{
           ...display,
-          fontFamily: "PlayfairV, 'Nirmala UI', serif",
-          fontSize: 380,
+          fontSize: L ? 300 : 340,
           lineHeight: 1,
           color: C.marigold,
           transform: `scale(${big})`,
           textShadow: `0 0 ${40 + glow * 60}px rgba(249,185,73,0.6)`,
-          margin: "20px 0 30px",
+          margin: L ? "10px 0 20px" : "20px 0 30px",
         }}
       >
-        ₹{minPrice()}
+        {LAUNCH_OFFER ? "FREE" : `₹${minPrice()}`}
       </div>
-      <Pop delay={14} style={{ color: C.cream, fontSize: 46, marginBottom: 60 }}>
-        se shuru · Chai se bhi sasta ☕
+      <Pop delay={14} style={{ color: C.cream, fontSize: L ? 42 : 46, marginBottom: L ? 50 : 60 }}>
+        {LAUNCH_OFFER ? "Bilkul muft · Limited time only ⏳" : "se shuru · Chai se bhi sasta ☕"}
       </Pop>
-      <div style={{ display: "flex", flexDirection: "column", gap: 26, alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: L ? "row" : "column", gap: 26, alignItems: "center", justifyContent: "center" }}>
         {chips.map((c, i) => (
           <Pop key={c} delay={24 + i * 8}>
             <div
@@ -461,9 +613,9 @@ function Price() {
                 background: "rgba(255,255,255,0.14)",
                 border: "2px solid rgba(255,255,255,0.25)",
                 color: "#fff",
-                fontSize: 50,
+                fontSize: L ? 42 : 50,
                 fontWeight: 600,
-                padding: "22px 56px",
+                padding: L ? "18px 44px" : "22px 56px",
                 borderRadius: 999,
               }}
             >
@@ -476,7 +628,7 @@ function Price() {
   );
 }
 
-function Logo({ size }: { size: number }) {
+export function Logo({ size }: { size: number }) {
   return (
     <svg viewBox="0 0 64 64" width={size} height={size}>
       <rect width="64" height="64" rx="16" fill={C.cream} />
@@ -491,35 +643,36 @@ function Logo({ size }: { size: number }) {
   );
 }
 
+const siteHost = site.url.replace(/^https?:\/\//, "");
+
 function Cta() {
+  const L = useLandscape();
   const frame = useCurrentFrame();
   const logo = useSpring(0, 10);
   const pulse = 1 + 0.04 * Math.sin(frame / 5);
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", color: C.cream, textAlign: "center" }}>
       <div style={{ transform: `scale(${logo}) rotate(${(1 - logo) * -20}deg)` }}>
-        <Logo size={260} />
+        <Logo size={L ? 190 : 260} />
       </div>
       <Pop delay={8}>
-        <div style={{ ...display, fontSize: 170, marginTop: 30, lineHeight: 1 }}>
+        <div style={{ ...display, fontSize: L ? 140 : 170, marginTop: L ? 20 : 30, lineHeight: 1 }}>
           {site.name}
-          <sup style={{ fontSize: 60, verticalAlign: "top", marginLeft: 6 }}>{site.trademark}</sup>
+          <sup style={{ fontSize: L ? 50 : 60, verticalAlign: "top", marginLeft: 6 }}>{site.trademark}</sup>
         </div>
       </Pop>
       <Pop delay={14}>
-        <div style={{ fontSize: 46, marginTop: 24, maxWidth: 900, lineHeight: 1.35 }}>
-          Shaadi Biodata & Resume
-          <br />
-          ready in minutes
+        <div style={{ fontSize: L ? 44 : 46, marginTop: L ? 16 : 24, maxWidth: L ? 1400 : 900, lineHeight: 1.35 }}>
+          Shaadi Biodata & Resume{L ? " " : <br />}ready in minutes
         </div>
       </Pop>
       <Pop delay={22}>
         <div
           style={{
-            marginTop: 60,
+            marginTop: L ? 40 : 60,
             background: C.marigold,
             color: C.ink,
-            fontSize: 44,
+            fontSize: L ? 46 : 44,
             fontWeight: 700,
             padding: "28px 50px",
             borderRadius: 999,
@@ -527,13 +680,15 @@ function Cta() {
             boxShadow: "0 25px 60px rgba(249,185,73,0.45)",
           }}
         >
-          {site.url.replace(/^https?:\/\//, "")}
+          {siteHost}
         </div>
       </Pop>
       <Pop delay={30}>
-        <div style={{ fontSize: 40, marginTop: 40, color: C.marigoldSoft }}>👆 Link in bio</div>
+        <div style={{ fontSize: 40, marginTop: L ? 30 : 40, color: C.marigoldSoft }}>
+          {L ? "👇 Link in description" : "👆 Link in bio"}
+        </div>
       </Pop>
-      <div style={{ position: "absolute", bottom: 120, fontSize: 34, opacity: 0.8 }}>
+      <div style={{ position: "absolute", bottom: L ? 50 : 120, fontSize: L ? 30 : 34, opacity: 0.8 }}>
         Powered by <b style={{ color: C.marigoldSoft }}>{site.poweredBy}</b>
       </div>
     </AbsoluteFill>
@@ -545,15 +700,19 @@ function Cta() {
 /* ------------------------------------------------------------------ */
 const SCENES: [number, number, () => ReactNode][] = [
   [0, 90, Hook],
-  [90, 135, BuildBiodata],
-  [225, 115, Colours],
-  [340, 95, Resumes],
-  [435, 85, Price],
-  [520, 80, Cta],
+  [90, 120, BuildBiodata],
+  [210, 90, Hindi],
+  [300, 100, Colours],
+  [400, 95, Resumes],
+  [495, 90, Offer],
+  [585, 90, Cta],
 ];
+
+export const PROMO_FRAMES = 675; // 22.5s @ 30fps
 
 export function Promo() {
   useFonts();
+  const L = useLandscape();
   const frame = useCurrentFrame();
   // Thin progress bar at the top (story-style)
   const progress = interpolate(frame, [0, PROMO_FRAMES], [0, 100], { easing: Easing.linear });
@@ -567,11 +726,68 @@ export function Promo() {
           </SceneFade>
         </Sequence>
       ))}
-      <div style={{ position: "absolute", top: 40, left: 60, right: 60, height: 8, borderRadius: 8, background: "rgba(255,255,255,0.2)" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: L ? 30 : 40,
+          left: 60,
+          right: 60,
+          height: L ? 6 : 8,
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.2)",
+        }}
+      >
         <div style={{ width: `${progress}%`, height: "100%", borderRadius: 8, background: C.marigold }} />
       </div>
       <Img src={staticFile("avatar-female.svg")} style={{ display: "none" }} />
       <Img src={staticFile("avatar-male.svg")} style={{ display: "none" }} />
+    </AbsoluteFill>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* YouTube thumbnail (1280x720)                                        */
+/* ------------------------------------------------------------------ */
+export function Thumbnail() {
+  useFonts();
+  const doc: DocumentPayload = {
+    templateId: "biodata-royal",
+    accent: "#8B1E3F",
+    data: { ...sampleBiodata, photo: staticFile("avatar-female.svg") },
+  };
+  const docHi: DocumentPayload = {
+    templateId: "biodata-lotus",
+    accent: "#BE185D",
+    data: { ...sampleBiodataHi, photo: staticFile("avatar-female.svg") },
+  };
+  return (
+    <AbsoluteFill style={rootVars}>
+      <Background />
+      <div style={{ position: "absolute", left: 60, top: 0, bottom: 0, width: 700, display: "flex", flexDirection: "column", justifyContent: "center", color: C.cream }}>
+        <div style={{ display: "inline-block", alignSelf: "flex-start", background: C.marigold, color: C.ink, fontWeight: 700, fontSize: 34, padding: "8px 26px", borderRadius: 999 }}>
+          {LAUNCH_OFFER ? "🎉 FREE · Launch offer" : `PDF from ₹${minPrice()}`}
+        </div>
+        <div style={{ ...display, fontSize: 92, lineHeight: 1.02, marginTop: 22 }}>
+          Shaadi Biodata
+          <br />
+          <span style={{ color: C.marigold, fontStyle: "italic", fontWeight: 400 }}>in 5 minutes</span>
+        </div>
+        <div style={{ fontSize: 34, marginTop: 22, fontWeight: 500 }}>English + हिन्दी · Resume bhi ✨</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 30 }}>
+          <Logo size={64} />
+          <div style={{ ...display, fontSize: 48 }}>
+            {site.name}
+            <sup style={{ fontSize: 20, verticalAlign: "top" }}>{site.trademark}</sup>
+          </div>
+        </div>
+      </div>
+      <div style={{ position: "absolute", left: 790, top: 90, transform: "rotate(-6deg)", boxShadow: "0 30px 60px rgba(0,0,0,0.45)", borderRadius: 10 }}>
+        <Doc doc={doc} width={300} />
+      </div>
+      <div style={{ position: "absolute", left: 950, top: 150, transform: "rotate(5deg)", boxShadow: "0 30px 60px rgba(0,0,0,0.45)", borderRadius: 10 }}>
+        <Doc doc={docHi} width={300} />
+      </div>
+      <Img src={staticFile("avatar-female.svg")} style={{ display: "none" }} />
     </AbsoluteFill>
   );
 }

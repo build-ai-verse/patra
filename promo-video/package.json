@@ -2,11 +2,14 @@
   "name": "patra-promo-video",
   "private": true,
   "version": "1.0.0",
-  "description": "Instagram Reel promo (1080x1920) for Patra, rendered with Remotion",
+  "description": "Launch promo for Patra: Instagram Reel / YouTube Short (1080x1920) and YouTube (1920x1080), rendered with Remotion",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Promo out/patra-reel.mp4 --codec=h264 --crf=18",
-    "still": "remotion still src/index.ts Promo out/cover.png --frame=500"
+    "render": "npm run render:reel && npm run render:youtube && npm run still:cover && npm run still:thumb",
+    "render:reel": "remotion render src/index.ts Reel out/patra-reel.mp4 --codec=h264 --crf=18",
+    "render:youtube": "remotion render src/index.ts YouTube out/patra-youtube.mp4 --codec=h264 --crf=18",
+    "still:cover": "remotion still src/index.ts Reel out/cover.png --frame=530",
+    "still:thumb": "remotion still src/index.ts Thumbnail out/youtube-thumbnail.jpg --image-format=jpeg --jpeg-quality=90"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.545",

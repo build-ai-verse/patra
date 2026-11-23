@@ -52,8 +52,8 @@ export default function PrivacyPage() {
       <h2>Service providers</h2>
       <p>
         We use Razorpay (payments){features.aiAutofill ? ", Anthropic (AI auto-fill, only when you use it)" : ""}, an email
-        delivery provider (sending your PDF), Google Drive (secure storage of order copies) and a hosting provider to run the
-        website.
+        delivery provider (sending your PDF), Google Drive (secure storage of order copies), Vercel (hosting) and Vercel Web
+        Analytics, which counts page visits anonymously without cookies or personal identifiers.
       </p>
       <h2>Retention</h2>
       <p>

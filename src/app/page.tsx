@@ -1,69 +1,140 @@
-import Image from "next/image";
+import Link from "next/link";
+import { maxPrice, minPrice, templates } from "@/lib/templates";
+import { samplePreview } from "@/lib/defaults";
+import { PreviewFrame } from "@/components/preview/PreviewFrame";
+import { TemplateCard } from "@/components/site/TemplateCard";
+import { CtaBand, Faq, Features, HowItWorks, Icon, icons, Pricing, SectionHeading } from "@/components/site/Sections";
+import { JsonLd } from "@/components/site/JsonLd";
+import { faqs } from "@/components/site/faq-data";
+import { brandFull, site } from "@/config/site";
+import { FREE } from "@/lib/pricing";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: `${brandFull} Marriage Biodata & Resume PDF`,
+            description: site.description,
+            brand: { "@type": "Brand", name: site.name },
+            offers: {
+              "@type": "AggregateOffer",
+              lowPrice: FREE ? 0 : minPrice(),
+              highPrice: FREE ? 0 : maxPrice(),
+              offerCount: templates.length,
+              priceCurrency: "INR",
+              availability: "https://schema.org/InStock",
+              url: site.url,
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          },
+        ]}
+      />
+      <Hero />
+      <section id="templates" className="scroll-mt-20 py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionHeading
+            eyebrow="Templates"
+            title={<>Designed to impress <span className="text-gradient">families & recruiters</span></>}
+            sub="Handcrafted templates for Indian marriage biodata and modern resumes. Pick one to start, you can switch colours anytime."
+          />
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {templates.map((t, i) => (
+              <TemplateCard key={t.id} t={t} priority={i < 2} />
+            ))}
+          </div>
+        </div>
+      </section>
+      <HowItWorks />
+      <Features />
+      <Pricing />
+      <Faq />
+      <CtaBand />
+    </>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="bg-mandala absolute inset-0" />
+      <div className="absolute -right-40 -top-40 h-[32rem] w-[32rem] rounded-full bg-marigold-300/40 blur-3xl" />
+      <div className="absolute -bottom-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-brand-200/50 blur-3xl" />
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-12 sm:px-6 md:pt-20 lg:grid-cols-2 lg:gap-8">
+        <div className="animate-fade-up text-center lg:text-left">
+          <span className="inline-flex items-center gap-2 rounded-full border border-marigold-400/50 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-brand-700 shadow-sm">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-marigold-500" />
+            {FREE ? "Launch offer: free PDF downloads" : `PDFs from just ₹${minPrice()}`} · No signup needed
+          </span>
+          <h1 className="mt-6 font-display text-4xl font-bold leading-[1.1] text-ink sm:text-5xl lg:text-6xl">
+            Shaadi biodata & resumes that make a <span className="text-gradient italic">beautiful</span> first impression
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-ink-soft lg:mx-0">
+            Create a stunning marriage biodata or a job-winning resume in minutes. Live preview free, then download a print-ready PDF, delivered instantly to your email.
           </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
+            <Link href="/create/biodata-royal" className="btn-primary px-7 py-3.5 text-base">
+              Create Marriage Biodata
+            </Link>
+            <Link href="/create/resume-classic" className="btn-ghost px-7 py-3.5 text-base">
+              Build My Resume
+            </Link>
+          </div>
+          <ul className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-ink-soft lg:justify-start">
+            {["UPI, Cards & Netbanking", "Instant PDF on email", "Print-ready A4"].map((x) => (
+              <li key={x} className="flex items-center gap-1.5">
+                <Icon d={icons.check} className="h-4 w-4 text-green-600" />
+                {x}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Fanned document previews */}
+        <div className="relative mx-auto h-[420px] w-full max-w-[520px] sm:h-[520px]" aria-hidden="true">
+          <div
+            className="animate-float absolute left-0 top-10 w-[46%] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/5"
+            style={{ ["--r" as string]: "-8deg", animationDelay: "0.5s" }}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <PreviewFrame doc={samplePreview("resume-modern")} fixedHeight />
+          </div>
+          <div
+            className="animate-float absolute right-0 top-14 w-[46%] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/5"
+            style={{ ["--r" as string]: "8deg", animationDelay: "1s" }}
           >
-            Documentation
-          </a>
+            <PreviewFrame doc={samplePreview("biodata-lotus")} fixedHeight />
+          </div>
+          <div
+            className="animate-float absolute left-[22%] top-0 z-10 w-[56%] overflow-hidden rounded-lg bg-white shadow-2xl shadow-brand-900/30 ring-1 ring-black/5"
+          >
+            <PreviewFrame doc={samplePreview("biodata-royal")} fixedHeight />
+          </div>
+          <div className="absolute bottom-6 left-2 z-20 flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-xl sm:bottom-10">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+              <Icon d={icons.mail} className="h-5 w-5" />
+            </span>
+            <div className="text-left">
+              <p className="text-xs text-ink-soft">Delivered to</p>
+              <p className="text-sm font-semibold">your inbox, instantly</p>
+            </div>
+          </div>
+          <div className="absolute bottom-0 right-2 z-20 rounded-2xl bg-brand-700 px-4 py-3 text-white shadow-xl sm:bottom-4">
+            <p className="text-xs text-white/70">{FREE ? "Launch offer" : "From"}</p>
+            <p className="font-display text-2xl font-bold">{FREE ? "Free" : `₹${minPrice()}`}</p>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -1,0 +1,61 @@
+Copyright (c) 2026 Thakur Ventures. All rights reserved.
+
+PROPRIETARY SOURCE-AVAILABLE LICENSE
+
+This repository, including all source code, templates, designs, graphics, text and other
+materials in it (the "Software"), is the property of Thakur Ventures and is protected by
+copyright law and international treaties.
+
+1. Permission to view
+   The Software is made publicly visible for reference and transparency only. You may view
+   and read the Software on the website where it is hosted.
+
+2. Restrictions
+   Except as stated in section 1 or as expressly agreed in writing by Thakur Ventures, you may
+   NOT, in whole or in part:
+   a. copy, reproduce or store the Software (other than transient copies made by your web
+      browser or by the hosting platform as described in section 3);
+   b. modify, adapt, translate or create derivative works based on the Software;
+   c. run, deploy, host or operate the Software, or any service built on it, for any purpose,
+      commercial or non-commercial;
+   d. distribute, publish, sublicense, sell, rent, lease or otherwise make the Software
+      available to anyone;
+   e. use the Software, or any part of it, to train, fine-tune or evaluate machine-learning
+      or AI models;
+   f. remove or alter any copyright, trademark or proprietary notices.
+
+3. Hosting platform
+   Where the Software is hosted on GitHub, users receive only the limited rights granted by
+   the GitHub Terms of Service (such as viewing and forking within GitHub). Those rights do not
+   permit any use, copying or distribution of the Software outside GitHub, or any use of a
+   fork beyond what those terms require.
+
+4. Trademarks and brand
+   No right is granted to use the names "Patra", "Patra(TM)", "Thakur Ventures", any logo,
+   template design or other brand element. These are reserved.
+
+5. Contributions
+   Any contribution you submit (for example a pull request or issue containing code) is
+   provided voluntarily, and you grant Thakur Ventures a perpetual, worldwide, royalty-free,
+   irrevocable licence to use, modify and distribute it. Submitting a contribution does not
+   give you any rights in the Software.
+
+6. Third-party components
+   Third-party components included in or used by the Software (for example the font files in
+   assets/fonts and promo-video/public/fonts, licensed under the SIL Open Font License, and
+   open-source packages listed in package.json) remain under their own licenses. This license
+   does not restrict any rights you have under those licenses.
+
+7. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO
+   EVENT SHALL THAKUR VENTURES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+   FROM OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+8. Termination
+   Any use of the Software in breach of this license automatically terminates any permission
+   you have under it, and Thakur Ventures may take legal action to protect its rights.
+
+9. Governing law
+   This license is governed by the laws of India.
+
+For licensing, partnership or permission requests, contact: support@build-ai-version.com

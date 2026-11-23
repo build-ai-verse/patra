@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --font-sans: var(--font-poppins), var(--font-hind), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), var(--font-martel), Georgia, serif;
+  --font-serif: var(--font-cormorant), var(--font-martel), Georgia, serif;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-brand-50: #fdf2f5;
+  --color-brand-100: #fbe4eb;
+  --color-brand-200: #f5c3d3;
+  --color-brand-300: #ec93ae;
+  --color-brand-400: #d95c82;
+  --color-brand-500: #b8325d;
+  --color-brand-600: #9a2349;
+  --color-brand-700: #7a1c3a;
+  --color-brand-800: #5e1530;
+  --color-brand-900: #3f0e20;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-marigold-300: #fcd38a;
+  --color-marigold-400: #f9b949;
+  --color-marigold-500: #f29a1f;
+  --color-marigold-600: #d97a0a;
+
+  --color-gold: #c8963e;
+  --color-cream: #fbf6ee;
+  --color-cream-200: #f4ead9;
+  --color-ink: #2a1a1f;
+  --color-ink-soft: #6b5a5f;
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s ease-out both;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Decorative paisley-dot background used in hero / CTA sections */
+.bg-mandala {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgb(122 28 58 / 0.09) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, var(--color-brand-700), var(--color-marigold-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+@layer components {
+/* Form controls */
+.field {
+  @apply w-full rounded-xl border border-cream-200 bg-white px-3.5 py-2.5 text-sm text-ink shadow-sm outline-none transition placeholder:text-ink-soft/50 focus:border-brand-400 focus:ring-4 focus:ring-brand-100;
+}
+.label {
+  @apply mb-1 block text-xs font-medium text-ink-soft;
+}
+.btn-primary {
+  @apply btn bg-brand-700 text-white shadow-lg shadow-brand-700/25 hover:bg-brand-800;
+}
+.btn-gold {
+  @apply btn bg-marigold-400 text-ink shadow-lg shadow-marigold-500/30 hover:bg-marigold-300;
+}
+.btn-ghost {
+  @apply btn border border-brand-200 bg-white/70 text-brand-700 hover:bg-white;
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+/* Long-form SEO / policy content */
+.prose-patra h2 {
+  @apply mt-10 font-display text-2xl font-bold text-ink;
+}
+.prose-patra h3 {
+  @apply mt-6 text-lg font-semibold text-ink;
+}
+.prose-patra p {
+  @apply mt-3 leading-relaxed text-ink-soft;
+}
+.prose-patra ul {
+  @apply mt-3 list-disc space-y-1.5 pl-5 text-ink-soft;
+}
+.prose-patra ol {
+  @apply mt-3 list-decimal space-y-1.5 pl-5 text-ink-soft;
+}
+.prose-patra a {
+  @apply font-medium text-brand-700 underline underline-offset-2;
+}
+.prose-patra strong {
+  @apply text-ink;
+}
 }

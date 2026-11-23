@@ -39,7 +39,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npx tsc --noEmit
+      # Generates Next.js route types (PageProps, LayoutProps) that tsc needs, then type-checks.
+      - run: npm run typecheck
 
   deploy:
     name: Deploy to production
